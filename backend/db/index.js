@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 // Connect to MongoDB
-mongoose.connect("mongodb://localhost:27017/noBunk"j)
+mongoose.connect("mongodb://localhost:27017/noBunk")
     .then(() => console.log("DB connected successfully"))
     .catch((err) => console.error("DB connection error:", err));
 
