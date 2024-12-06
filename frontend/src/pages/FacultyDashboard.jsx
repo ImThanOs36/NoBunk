@@ -13,7 +13,7 @@ const departments = ['Computer Science', 'Electrical Engineering', 'Mechanical E
 const years = ['First Year', 'Second Year', 'Third Year'];
 
 export default function FacultyDashboard() {
-  const [attendanceList, setAttendanceList] = useState(students);
+  const [attendanceList, setAttendanceList] = useState(students); 
   const [date, setDate] = useState('');
   const [subject, setSubject] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');

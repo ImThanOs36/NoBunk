@@ -6,11 +6,8 @@ export default function Home() {
       <Navbar />
       <div>
         <div>
-
         </div>
         <div>
-
-
         </div>
       </div>
       <div className="flex">
