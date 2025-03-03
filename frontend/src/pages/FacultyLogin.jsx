@@ -21,7 +21,7 @@ export default function FacultyLogin() {
             axios.post("http://localhost:3000/faculty/login", { username, password }).then((response) => {
                 console.log(response.data)
 
-                localStorage.setItem('name', response.data.name)
+                localStorage.setItem('facultyname', response.data.name)
                 localStorage.setItem('role', response.data.role)
                 localStorage.setItem('department', response.data.department)
                 localStorage.setItem('id', response.data.id)

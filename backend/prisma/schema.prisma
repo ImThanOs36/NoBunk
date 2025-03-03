@@ -16,6 +16,7 @@ model Student {
   year       String
   mobile     String?
   attendance Attendance[]
+  Marks      Marks[]
 }
 
 model Faculty {
@@ -51,4 +52,12 @@ model Attendance {
   subject   String
   status    String
   type      String   @default("lecture")
+}
+
+model Marks {
+  id        Int     @id @default(autoincrement())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [enrNumber])
+  type      String
+  marks     Json    @default("{}")
 }

@@ -6,6 +6,7 @@ const upload = multer()
 var XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
+const jwt = require("jsonwebtoken");
 
 
 
@@ -14,6 +15,7 @@ const prisma = new PrismaClient()
 
 router.post("/faculty/login", async (req, res) => {
     const { username, password } = req.body;
+
     try {
         const facultyData = await prisma.faculty.findFirst({
 
@@ -28,9 +30,9 @@ router.post("/faculty/login", async (req, res) => {
             }
 
         })
-
+        const token = jwt.sign({ id: facultyData.id }, process.env.JWT_SECRET)
         res.status(200)
-        res.json({ message: "login sucessfully", isLoggedIn: true, id: facultyData.id, name: facultyData.name, role: facultyData.role, department: facultyData.department })
+        res.json({ token: token, message: "login sucessfully", isLoggedIn: true, id: facultyData.id, name: facultyData.name, role: facultyData.role, department: facultyData.department })
 
     } catch (error) {
         res.status(411)
@@ -86,6 +88,7 @@ router.post("/class", async (req, res) => {
 })
 router.post("/facultyclass", async (req, res) => {
 
+
     const { facultyId } = req.body;
     try {
         const classes = await prisma.class.findMany({
@@ -137,8 +140,8 @@ router.post("/allstudents", async (req, res) => {
     const allstudents = await prisma.student.findMany({
         where: {
             year: {
-                equals:year,
-                mode:'insensitive'
+                equals: year,
+                mode: 'insensitive'
             },
             department: {
                 equals: department,
@@ -268,6 +271,37 @@ router.post("/faculty/create", async (req, res) => {
 
 })
 
+router.post("/addmarks", async (req, res) => {
 
+    try {
+
+        const marksData = [{
+            subject: "Sub1",
+            totalMarks: 10,
+            gotMarks: 10,
+
+        }, {
+            subject: "Sub2",
+            totalMarks: 10,
+            gotMarks: 10,
+
+        }]
+
+        const marks = await prisma.marks.create({
+            data: {
+                studentId: 1,
+                type: "semister",
+                marks: marksData
+
+            }
+        })
+        res.json({ marks })
+
+    } catch (error) {
+        console.log(error)
+    }
+
+
+})
 
 module.exports = router;

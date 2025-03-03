@@ -6,8 +6,8 @@ export default function FacultyDashboard() {
     const navigate = useNavigate()
 
     const facultyData = {
-        name: localStorage.getItem('name'),
-        department: localStorage.getItem('departetn'),
+        name: localStorage.getItem('facultyname'),
+        department: localStorage.getItem('department'),
 
     }
     return (
@@ -32,27 +32,31 @@ export default function FacultyDashboard() {
                             <p>
                                 Today Date : {new Date().toDateString()}
                             </p>
+                            <button className=" py-2 px-4 bg-black text-white rounded-lg" onClick={() => {
+                                localStorage.clear()
+                                navigate("/facultylogin")
+                            }}>Log Out</button>
                         </div>
                     </div>
-                    
 
-                        <div className="flex gap-1 flex-col border-2 border-black rounded-lg  w-full md:w-1/4">
 
-                            <span className="w-full p-2 bg-black text-white text-xl text-center font-bold">Class actions</span>
-                            <div className="p-2 flex gap-2 flex-col">
+                    <div className="flex gap-1 flex-col border-2 border-black rounded-lg  w-full md:w-1/4">
 
-                                <button className=" py-2 px-4 bg-black text-white rounded-lg" onClick={() => {
-                                    navigate("/createclass")
-                                }}>Create Class</button>
-                                <button className=" py-2 px-4 bg-black text-white rounded-lg" onClick={() => {
-                                    navigate("/classrecords")
-                                }}>Class records</button>
+                        <span className="w-full p-2 bg-black text-white text-xl text-center font-bold">Class actions</span>
+                        <div className="p-2 flex gap-2 flex-col">
 
-                            </div>
+                            <button className=" py-2 px-4 bg-black text-white rounded-lg" onClick={() => {
+                                navigate("/createclass")
+                            }}>Create Class</button>
+                            <button className=" py-2 px-4 bg-black text-white rounded-lg" onClick={() => {
+                                navigate("/classrecords")
+                            }}>Class records</button>
 
                         </div>
 
-                 
+                    </div>
+
+
 
                 </div>
 

@@ -4,13 +4,16 @@ import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 export default function ClassAttendances() {
+
+
+
     const [attendanceData, setattendancesData] = useState({
         Attendance: [{ student: { name: "" } }]
     });
     const params = useParams('classId');
 
     async function getAttendances() {
-        axios.get(`http://localhost:30ltycl00/facuass/${params.classId}`).then((response) => {
+        axios.get(`http://localhost:3000/facultyclass/${params.classId}`).then((response) => {
 
             const data = response.data;
             const att = data.Attendance;

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useState } from 'react';
-import { Navigate, Router, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 export default function StudentLogin() {
@@ -14,8 +14,10 @@ export default function StudentLogin() {
                 localStorage.setItem('role', response.data.role)
                 localStorage.setItem('enrNumber', response.data.enrNumber)
                 localStorage.setItem('department', response.data.department)
-
-                navigate("/summary/" + response.data.enrNumber)
+                localStorage.setItem('token',response.data.token)
+                const student = response.data.student
+                const enr = student.enrNumber;
+                navigate("/summary/" + enr)
             })
         } catch (error) {
             console.log(error)

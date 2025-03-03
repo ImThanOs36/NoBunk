@@ -15,11 +15,15 @@ export default function StudentDashboard() {
   });
   const [filteredData, setFilteredData] = useState([{}])
   const id = useParams("enrNumber");
-  const enrNumber = id.enrNumber;
+  const enrNumber = String(id.enrNumber);
 
   async function getData() {
     try {
-      axios.get(`http://localhost:3000/student/${enrNumber}`).then((response) => {
+      axios.get(`http://localhost:3000/student/${enrNumber}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      }).then((response) => {
         setStudentData(response.data);
         const attendanceRes = response.data.attendance;
         setFilteredData(attendanceRes)

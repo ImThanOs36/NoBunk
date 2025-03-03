@@ -13,6 +13,7 @@ import StudentLogin from "./pages/StudentLogin";
 import CreateClass from "./pages/CreateClass";
 import ClassRecords from "./pages/ClassRecords";
 import ClassAttendances from "./pages/ClassAttendance";
+import Saniya from "./pages/Saniya";
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
   {
     path: "/classrecords",
     element: <ClassRecords />,
+  },
+  {
+    path: "/saniya",
+    element: <Saniya />,
   },
   {
     path: "/classattendance/:classId",

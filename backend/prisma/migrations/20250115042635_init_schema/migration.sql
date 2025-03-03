@@ -7,7 +7,6 @@ CREATE TABLE "Student" (
     "department" TEXT NOT NULL,
     "year" TEXT NOT NULL,
     "mobile" TEXT,
-
     CONSTRAINT "Student_pkey" PRIMARY KEY ("id")
 );
 

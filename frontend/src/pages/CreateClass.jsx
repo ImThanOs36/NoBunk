@@ -27,7 +27,7 @@ export default function CreateClass() {
 
 
   const faculty = {
-    name: localStorage.getItem("name"),
+    name: localStorage.getItem("facultyname"),
     role: localStorage.getItem("role"),
     department: localStorage.getItem("department"),
     facultyId: localStorage.getItem('facultyId')
