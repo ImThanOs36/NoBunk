@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Department {
+  CSE // Computer Science Engineering
+  EE // Electrical and Electronics
+  MECH // Mechanical Engineering
+  CIVIL // Civil Engineering
+}
+
+enum Year {
+  FIRST
+  SECOND
+  THIRD
+}
+
+enum Type {
+  LECTURE
+  PRACTICAL
+}
+
+model Student {
+  id         Int          @id @default(autoincrement())
+  name       String
+  rollNumber Int
+  enrNumber  String       @unique
+  department Department
+  year       Year
+  attendance Attendance[]
+}
+
+model Faculty {
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique()
+  password   String
+  department String
+  role       String    @default("faculty")
+  Class      Class[]
+  subjects   Subject[]
+}
+
+model Admin {
+  id         Int    @id @default(autoincrement())
+  name       String
+  email      String @unique()
+  password   String
+  department String
+  role       String @default("admin")
+}
+
+model Subject {
+  id         Int          @id @default(autoincrement())
+  name       String
+  code       Int          @unique
+  department Department[]
+  semester   Int
+  year       String
+  type       Type[]       @default([LECTURE])
+  facultyId  Int?
+  faculty    Faculty?     @relation(fields: [facultyId], references: [id])
+  classes    Class[]
+}
+
+model Class {
+  id        Int     @id @default(autoincrement())
+  facultyId Int
+  faculty   Faculty @relation(fields: [facultyId], references: [id])
+
+  subjectCode   Int
+  subject     Subject      @relation(fields: [subjectCode], references: [code])
+  subjectName String
+  time        DateTime     @default(now())
+  department  String
+  year        String
+  type        Type[]       @default([LECTURE])
+  Attendance  Attendance[]
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  studentId String
+  classId   Int
+  class     Class    @relation(fields: [classId], references: [id])
+  student   Student  @relation(fields: [studentId], references: [enrNumber])
+  date      DateTime @default(now())
+  subject   String
+  status    String
+  type      Type     @default(LECTURE)
+}
