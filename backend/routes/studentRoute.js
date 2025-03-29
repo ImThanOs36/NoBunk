@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 
 
 
-router.post("/student/login", async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
     try {
         const { username } = req.body;
 
@@ -50,7 +50,7 @@ router.post("/student/login", async (req, res, next) => {
     }
 });
 
-router.get("/student/:enrNumber", authMiddleware, async (req, res, next) => {
+router.get("/:enrNumber", authMiddleware, async (req, res, next) => {
     try {
         const { enrNumber } = req.params;
 
@@ -110,7 +110,7 @@ router.get("/student/:enrNumber", authMiddleware, async (req, res, next) => {
 
 
 
-const client = require('twilio')(accountSid, authToken);
+// const client = require('twilio')(accountSid, authToken);
 router.post("/sendSMS", async (req, res, next) => {
     try {
         const { phoneNumber, message } = req.body;

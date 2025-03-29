@@ -11,6 +11,7 @@ import StudentLogin from "./pages/StudentLogin";
 import FacultyLogin from "./pages/FacultyLogin";
 import Admin from "./pages/Admin";
 import SubjectManagement from "./pages/SubjectManagement";
+import AdminLogin from "./pages/AdminLogin";
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/faculty" element={<FacultyDashboard />} />
                 <Route path="/student/login" element={<StudentLogin />} />
                 <Route path="/faculty/login" element={<FacultyLogin />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/create-class" element={<CreateClass />} />
                 <Route path="/class-records" element={<ClassRecords />} />
                 <Route path="/class-attendance/:id" element={<ClassAttendance />} />

@@ -82,24 +82,7 @@ const StudentProfile = () => {
                         </div>
                     </div>
 
-                    {/* Attendance Statistics */}
-                    <div className="mb-6">
-                        <h3 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-green-100 p-4 rounded-lg">
-                                <p className="text-green-800 font-semibold">Present</p>
-                                <p className="text-2xl font-bold text-green-600">{student.presentLectures}</p>
-                            </div>
-                            <div className="bg-red-100 p-4 rounded-lg">
-                                <p className="text-red-800 font-semibold">Absent</p>
-                                <p className="text-2xl font-bold text-red-600">{student.absentLectures}</p>
-                            </div>
-                            <div className="bg-blue-100 p-4 rounded-lg">
-                                <p className="text-blue-800 font-semibold">Total</p>
-                                <p className="text-2xl font-bold text-blue-600">{student.totalLectures}</p>
-                            </div>
-                        </div>
-                    </div>
+                  
 
                     {/* Recent Attendance */}
                     <div>
