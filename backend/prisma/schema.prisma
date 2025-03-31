@@ -73,7 +73,7 @@ model Class {
   facultyId Int
   faculty   Faculty @relation(fields: [facultyId], references: [id])
 
-  subjectCode   Int
+  subjectCode Int
   subject     Subject      @relation(fields: [subjectCode], references: [code])
   subjectName String
   time        DateTime     @default(now())

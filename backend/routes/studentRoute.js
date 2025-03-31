@@ -8,10 +8,6 @@ const twilio = require('twilio');
 const router = Router();
 const prisma = new PrismaClient();
 
-
-
-
-
 router.post("/login", async (req, res, next) => {
     try {
         const { username } = req.body;
@@ -43,7 +39,6 @@ router.post("/login", async (req, res, next) => {
             status: 'success',
             student,
             token
-
         });
     } catch (error) {
         next(error);
@@ -108,8 +103,6 @@ router.get("/:enrNumber", authMiddleware, async (req, res, next) => {
     }
 });
 
-
-
 // const client = require('twilio')(accountSid, authToken);
 router.post("/sendSMS", async (req, res, next) => {
     try {
@@ -136,25 +129,10 @@ router.post("/sendSMS", async (req, res, next) => {
     }
 });
 
-
-
-
 router.get("/data", (req, res) => {
-
-
-
     const name = "Pratik";
-
-
     res.json(name)
-
-
 })
-
-
-
-
-
 
 module.exports = router
 

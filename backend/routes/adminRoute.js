@@ -9,6 +9,7 @@ const fs = require('fs');
 const multer = require('multer')
 const upload = multer()
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
 
 
 const prisma = new PrismaClient();
@@ -18,23 +19,18 @@ router.post("/student/create", async (req, res) => {
     try {
         const newStudent = await prisma.student.create({
             data: {
-                name: name,
-                enrNumber: enrNumber,
-                rollNumber: rollNumber,
-                department: department,
-                year: year
+                name,
+                enrNumber,
+                rollNumber: Number(rollNumber),
+                department,
+                year
             }
         })
         res.json(newStudent)
-
     } catch (error) {
-        console.log(error)
+        res.status(500).json({ error: error.message })
     }
-
-
 })
-
-
 
 router.post("/faculty/create", async (req, res, next) => {
     try {
@@ -43,7 +39,6 @@ router.post("/faculty/create", async (req, res, next) => {
         if (!name || !email || !password || !department) {
             throw new AppError("Name, email, password, department and role are required", 400);
         }
-
 
         const existingFaculty = await prisma.faculty.findUnique({
             where: { email }
@@ -54,7 +49,6 @@ router.post("/faculty/create", async (req, res, next) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-
 
         const faculty = await prisma.faculty.create({
             data: {
@@ -69,7 +63,6 @@ router.post("/faculty/create", async (req, res, next) => {
                 email: true,
                 department: true,
                 role: true,
-
             }
         });
 
@@ -118,11 +111,33 @@ router.post("/subject/assign", async (req, res, next) => {
             status: 'success',
             data: subject
         })
-
-
     } catch (error) {
         next(error);
     }
+})
+
+router.get("/subjects", async (req, res, next) => {
+    const subjects = await prisma.subject.findMany({
+        select: {
+            id: true,
+            name: true,
+            code: true,
+            department: true,
+            semester: true,
+            year: true,
+            type: true,
+            faculty: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
+        }
+    })
+    res.status(200).json({
+        status: 'success',
+        data: subjects
+    })
 })
 
 
@@ -156,11 +171,6 @@ router.post("/student/addbulk", upload.single('file'), async (req, res, next) =>
     }
 });
 
-
-
-
-
-
 router.post("/subjects/add", async (req, res, next) => {
     try {
         const { name, code, department, semester, year } = req.body;
@@ -172,7 +182,7 @@ router.post("/subjects/add", async (req, res, next) => {
         const subject = await prisma.subject.create({
             data: {
                 name,
-                code,
+                code: Number(code),
                 department,
                 semester: Number(semester),
                 year
@@ -190,17 +200,17 @@ router.post("/subjects/add", async (req, res, next) => {
 
 router.put("/subjects/edit", async (req, res, next) => {
     try {
-        const { id, name, code, department, semester, year } = req.body;
+        const { name, code, department, semester, year } = req.body;
 
-        if (!id || !name || !code || !department || !semester || !year) {
+        if (!name || !code || !department || !semester || !year) {
             throw new AppError("Subject ID, name, code, department, semester and year are required", 400);
         }
 
         const subject = await prisma.subject.update({
-            where: { id: Number(id) },
+            where: { code: Number(code) },
             data: {
                 name,
-                code,
+                code: Number(code),
                 department,
                 semester: Number(semester),
                 year
@@ -210,6 +220,33 @@ router.put("/subjects/edit", async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             data: subject
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+router.delete("/subjects/:subjectCode", async (req, res, next) => {
+    try {
+        const { subjectCode } = req.params;
+        console.log(subjectCode)
+
+        // First check if the subject exists
+        const existingSubject = await prisma.subject.findUnique({
+            where: { code: parseInt(subjectCode) }
+        });
+
+        if (!existingSubject) {
+            throw new AppError("Subject not found", 404);
+        }
+
+        // If subject exists, proceed with deletion
+        await prisma.subject.delete({
+            where: { code: parseInt(subjectCode) }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Subject deleted successfully'
         });
     } catch (error) {
         next(error);
@@ -225,7 +262,6 @@ router.get("/attendance", async (req, res, next) => {
             throw new AppError("Department and year are required", 400);
         }
 
-
         // Get all students for the selected department and year
         const students = await prisma.student.findMany({
             where: {
@@ -238,20 +274,33 @@ router.get("/attendance", async (req, res, next) => {
                 rollNumber: true,
                 enrNumber: true
             }
+        });
 
+        // Get all subjects for the department and year
+        const subjects = await prisma.subject.findMany({
+            where: {
+                department: {
+                    has: department
+                },
+                year: year
+            },
+            select: {
+                code: true,
+                name: true,
+                type: true
+            }
         });
 
         // Get attendance data for each student
         const attendanceData = await Promise.all(students.map(async (student) => {
-
+            // Get overall attendance
             const attendance = await prisma.attendance.groupBy({
-                by: ['status'],
+                by: ['status', 'type'],
                 where: {
                     studentId: String(student.enrNumber)
                 },
                 _count: true
             });
-            console.log(attendance)
 
             const totalClasses = attendance.reduce((sum, curr) => sum + curr._count, 0);
             const presentCount = attendance.find(a => a.status === 'Present')?._count || 0;
@@ -260,15 +309,61 @@ router.get("/attendance", async (req, res, next) => {
                 ? Math.round((presentCount / totalClasses) * 100)
                 : 0;
 
+            // Get subject-wise attendance
+            const subjectAttendance = await Promise.all(subjects.map(async (subject) => {
+                const subjectAttendance = await prisma.attendance.groupBy({
+                    by: ['status', 'type'],
+                    where: {
+                        studentId: String(student.enrNumber),
+                        subject: subject.name
+                    },
+                    _count: true
+                });
+
+                const subjectTotalClasses = subjectAttendance.reduce((sum, curr) => sum + curr._count, 0);
+                const subjectPresentCount = subjectAttendance.find(a => a.status === 'Present')?._count || 0;
+
+                // Calculate lecture and practical attendance separately
+                const lectureAttendance = subjectAttendance.filter(a => a.type === 'LECTURE');
+                const practicalAttendance = subjectAttendance.filter(a => a.type === 'PRACTICAL');
+
+                const lectureTotal = lectureAttendance.reduce((sum, curr) => sum + curr._count, 0);
+                const lecturePresent = lectureAttendance.find(a => a.status === 'Present')?._count || 0;
+                const practicalTotal = practicalAttendance.reduce((sum, curr) => sum + curr._count, 0);
+                const practicalPresent = practicalAttendance.find(a => a.status === 'Present')?._count || 0;
+
+                return {
+                    subjectCode: subject.code,
+                    subjectName: subject.name,
+                    totalClasses: subjectTotalClasses,
+                    present: subjectPresentCount,
+                    absent: subjectTotalClasses - subjectPresentCount,
+                    lecture: {
+                        total: lectureTotal,
+                        present: lecturePresent,
+                        absent: lectureTotal - lecturePresent,
+                        percentage: lectureTotal > 0 ? Math.round((lecturePresent / lectureTotal) * 100) : 0
+                    },
+                    practical: {
+                        total: practicalTotal,
+                        present: practicalPresent,
+                        absent: practicalTotal - practicalPresent,
+                        percentage: practicalTotal > 0 ? Math.round((practicalPresent / practicalTotal) * 100) : 0
+                    }
+                };
+            }));
+
             return {
                 rollNumber: student.rollNumber,
                 name: student.name,
-                totalClasses: totalClasses,
+                totalClasses,
                 present: presentCount,
                 absent: absentCount,
-                attendancePercentage
+                attendancePercentage,
+                subjectAttendance
             };
         }));
+
         res.status(200).json({
             status: 'success',
             data: attendanceData
@@ -426,75 +521,133 @@ router.get("/department-analytics", async (req, res, next) => {
 });
 
 // Export attendance data to Excel
-router.get("/export-attendance", async (req, res, next) => {
+router.get("/export-attendance", async (req, res) => {
     try {
         const { department, year } = req.query;
 
         if (!department || !year) {
-            throw new AppError("Department and year are required", 400);
+            return res.status(400).json({
+                status: 'error',
+                message: 'Department and year are required'
+            });
         }
 
+        // Get all students in the department and year
         const students = await prisma.student.findMany({
             where: {
-                department: department,
-                year: year
+                department,
+                year
+            },
+            orderBy: {
+                rollNumber: 'asc'
             },
             select: {
                 id: true,
                 name: true,
                 rollNumber: true,
-                enrNumber: true
+                enrNumber: true,
+                department: true,
+                year: true,
+                attendance: {
+                    select: {
+                        date: true,
+                        subject: true,
+                        status: true,
+                        type: true
+                    }
+                }
             }
-
         });
 
-        const attendanceData = await Promise.all(students.map(async (student) => {
-            const attendance = await prisma.attendance.groupBy({
-                by: ['status'],
-                where: {
-                    studentId: String(student.enrNumber)
+        // Get all subjects for the department and year
+        const subjects = await prisma.subject.findMany({
+            where: {
+                department: {
+                    has: department
                 },
-                _count: true
-            });
+                year: year
+            },
+            select: {
+                code: true,
+                name: true
+            }
+        });
 
-            const totalClasses = attendance.reduce((sum, curr) => sum + curr._count, 0);
-            const presentCount = attendance.find(a => a.status === 'Present')?._count || 0;
-            const absentCount = attendance.find(a => a.status === 'Absent')?._count || 0;
-            const attendancePercentage = totalClasses > 0
-                ? Math.round((presentCount / totalClasses) * 100)
-                : 0;
+        // Prepare data for Excel
+        const workbook = XLSX.utils.book_new();
+        
+        // Create attendance summary sheet
+        const summaryData = students.map(student => {
+            const totalClasses = student.attendance.length;
+            const presentClasses = student.attendance.filter(a => a.status === "Present").length;
+            const attendancePercentage = totalClasses > 0 ? ((presentClasses / totalClasses) * 100).toFixed(2) : 0;
 
             return {
                 'Roll Number': student.rollNumber,
                 'Name': student.name,
                 'Total Classes': totalClasses,
-                'Present': presentCount,
-                'Absent': absentCount,
-                'Attendance %': attendancePercentage
+                'Present': presentClasses,
+                'Absent': totalClasses - presentClasses,
+                'Overall Attendance %': attendancePercentage
             };
-        }));
-
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.json_to_sheet(attendanceData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance Data');
-
-        const fileName = `attendance_${department}_${year}_${Date.now()}.xlsx`;
-        const filePath = path.join(__dirname, '../uploads', fileName);
-        XLSX.writeFile(workbook, filePath);
-
-        res.download(filePath, fileName, (err) => {
-            if (err) {
-                console.error('Error downloading file:', err);
-            }
-            // Clean up the file after download
-            fs.unlink(filePath, (err) => {
-                if (err) {
-                    console.error('Error deleting file:', err);
-                }
-            });
         });
+
+        const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(workbook, summarySheet, 'Overall Attendance');
+
+        // Create subject-wise attendance sheet
+        const subjectWiseData = students.flatMap(student => {
+            const subjectAttendance = subjects.map(subject => {
+                const subjectRecords = student.attendance.filter(a => a.subject === subject.name);
+                const totalClasses = subjectRecords.length;
+                const presentClasses = subjectRecords.filter(a => a.status === "Present").length;
+                const attendancePercentage = totalClasses > 0 ? ((presentClasses / totalClasses) * 100).toFixed(2) : 0;
+
+                return {
+                    'Roll Number': student.rollNumber,
+                    'Name': student.name,
+                    'Subject': subject.name,
+                    'Total Classes': totalClasses,
+                    'Present': presentClasses,
+                    'Absent': totalClasses - presentClasses,
+                    'Attendance %': attendancePercentage
+                };
+            });
+            return subjectAttendance;
+        });
+
+        const subjectWiseSheet = XLSX.utils.json_to_sheet(subjectWiseData);
+        XLSX.utils.book_append_sheet(workbook, subjectWiseSheet, 'Subject-wise Attendance');
+
+        // Create detailed attendance sheet
+        const detailedData = students.flatMap(student => 
+            student.attendance.map(record => ({
+                'Roll Number': student.rollNumber,
+                'Name': student.name,
+                'Date': new Date(record.date).toLocaleDateString(),
+                'Subject': record.subject,
+                'Type': record.type,
+                'Status': record.status
+            }))
+        );
+
+        const detailedSheet = XLSX.utils.json_to_sheet(detailedData);
+        XLSX.utils.book_append_sheet(workbook, detailedSheet, 'Detailed Attendance');
+
+        // Generate Excel file
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+        
+        // Set response headers
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=attendance_${department}_${year}.xlsx`);
+        
+        // Send the Excel file
+        res.send(excelBuffer);
     } catch (error) {
-        next(error);
+        res.status(500).json({
+            status: 'error',
+            message: error.message
+        });
     }
 });
 
@@ -568,7 +721,7 @@ router.get("/attendance/export", async (req, res, next) => {
         // Set headers for file download
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename=attendance_report.xlsx');
-        
+
         // Send the file
         res.send(excelBuffer);
     } catch (error) {
@@ -589,5 +742,440 @@ router.get("/faculty", async (req, res, next) => {
     }
 })
 
+// Faculty Management Routes
+router.put("/faculty/:facultyId", async (req, res, next) => {
+    try {
+        const { facultyId } = req.params;
+        const { name, email, password, department, role } = req.body;
+
+        // Check if faculty exists
+        const existingFaculty = await prisma.faculty.findUnique({
+            where: { id: parseInt(facultyId) }
+        });
+
+        if (!existingFaculty) {
+            throw new AppError("Faculty not found", 404);
+        }
+
+        // Prepare update data
+        const updateData = {
+            name,
+            email,
+            department,
+            role
+        };
+
+        // Only update password if provided
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateData.password = hashedPassword;
+        }
+
+        // Update faculty
+        const updatedFaculty = await prisma.faculty.update({
+            where: { id: parseInt(facultyId) },
+            data: updateData,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                department: true,
+                role: true
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: updatedFaculty
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.delete("/faculty/:facultyId", async (req, res, next) => {
+    try {
+        const { facultyId } = req.params;
+
+        // Check if faculty exists
+        const existingFaculty = await prisma.faculty.findUnique({
+            where: { id: parseInt(facultyId) }
+        });
+
+        if (!existingFaculty) {
+            throw new AppError("Faculty not found", 404);
+        }
+
+        // Delete faculty
+        await prisma.faculty.delete({
+            where: { id: parseInt(facultyId) }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Faculty deleted successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Student Management Routes
+router.get("/students", async (req, res, next) => {
+    try {
+        const students = await prisma.student.findMany({
+            orderBy: [
+                { department: 'asc' },
+                { year: 'asc' },
+                { rollNumber: 'asc' }
+            ]
+        });
+        res.status(200).json({
+            status: 'success',
+            data: students
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.put("/student/:studentId", async (req, res, next) => {
+    try {
+        const { studentId } = req.params;
+        const { name, enrNumber, rollNumber, department, year } = req.body;
+
+        // Check if student exists
+        const existingStudent = await prisma.student.findUnique({
+            where: { id: parseInt(studentId) }
+        });
+
+        if (!existingStudent) {
+            throw new AppError("Student not found", 404);
+        }
+
+        // Update student
+        const updatedStudent = await prisma.student.update({
+            where: { id: parseInt(studentId) },
+            data: {
+                name,
+                enrNumber,
+                rollNumber: parseInt(rollNumber),
+                department,
+                year
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: updatedStudent
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.delete("/student/:studentId", async (req, res, next) => {
+    try {
+        const { studentId } = req.params;
+
+        // Check if student exists
+        const studentToDelete = await prisma.student.findUnique({
+            where: { id: parseInt(studentId) }
+        });
+
+        if (!studentToDelete) {
+            throw new AppError("Student not found", 404);
+        }
+
+        // Get all students in the same department and year with higher roll numbers
+        const studentsToUpdate = await prisma.student.findMany({
+            where: {
+                department: studentToDelete.department,
+                year: studentToDelete.year,
+                rollNumber: {
+                    gt: studentToDelete.rollNumber
+                }
+            },
+            orderBy: {
+                rollNumber: 'asc'
+            }
+        });
+
+        // Delete the student
+        await prisma.student.delete({
+            where: { id: parseInt(studentId) }
+        });
+
+        // Update roll numbers for remaining students
+        for (let i = 0; i < studentsToUpdate.length; i++) {
+            await prisma.student.update({
+                where: { id: studentsToUpdate[i].id },
+                data: {
+                    rollNumber: studentToDelete.rollNumber + i
+                }
+            });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Student deleted successfully and roll numbers updated'
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Admin Login Route (Public)
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Email and password are required'
+            });
+        }
+
+        // Find admin by email
+        const admin = await prisma.admin.findUnique({ 
+            where: { email },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                password: true,
+                role: true
+            }
+        });
+
+        if (!admin) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Invalid email or password'
+            });
+        }
+
+        // Verify password
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Invalid email or password'
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            {
+                id: admin.id,
+                email: admin.email,
+                role: admin.role
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        // Return admin data without password
+        const adminData = {
+            id: admin.id,
+            name: admin.name,
+            email: admin.email,
+            role: admin.role
+        };
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                token,
+                admin: adminData
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message
+        });
+    }
+});
+
+// Admin Management Routes
+router.get("/admins", async (req, res) => {
+    try {
+        const admins = await prisma.admin.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+            }
+        });
+        res.json({
+            status: 'success',
+            data: admins
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error fetching admins'
+        });
+    }
+});
+
+// Create new admin
+router.post('/create', async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        // Check if admin exists
+        const adminExists = await prisma.admin.findUnique({
+            where: { email }
+        });
+        
+        if (adminExists) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Admin with this email already exists'
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create admin
+        const admin = await prisma.admin.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                role: 'SUPER_ADMIN'
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+            }
+        });
+
+        res.status(201).json({
+            status: 'success',
+            data: admin
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error creating admin'
+        });
+    }
+});
+
+// Update admin
+router.put('/:adminId', async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        
+        // Check if admin exists
+        const admin = await prisma.admin.findUnique({
+            where: { id: parseInt(req.params.adminId) }
+        });
+
+        if (!admin) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Admin not found'
+            });
+        }
+
+        // Check if email is being changed and if it's already taken
+        if (email && email !== admin.email) {
+            const emailExists = await prisma.admin.findUnique({
+                where: { email }
+            });
+            if (emailExists) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Email already in use'
+                });
+            }
+        }
+
+        // Prepare update data
+        const updateData = {
+            name: name || admin.name,
+            email: email || admin.email
+        };
+
+        // Only update password if provided
+        if (password) {
+            updateData.password = await bcrypt.hash(password, 10);
+        }
+
+        // Update admin
+        const updatedAdmin = await prisma.admin.update({
+            where: { id: parseInt(req.params.adminId) },
+            data: updateData,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+            }
+        });
+
+        res.json({
+            status: 'success',
+            data: updatedAdmin
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error updating admin'
+        });
+    }
+});
+
+// Delete admin
+router.delete('/:adminId', async (req, res) => {
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: { id: parseInt(req.params.adminId) }
+        });
+
+        if (!admin) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Admin not found'
+            });
+        }
+
+        // Check if this is the last super admin
+        const superAdminCount = await prisma.admin.count({
+            where: { role: 'SUPER_ADMIN' }
+        });
+        
+        if (superAdminCount === 1 && admin.role === 'SUPER_ADMIN') {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Cannot delete the last super admin'
+            });
+        }
+
+        await prisma.admin.delete({
+            where: { id: parseInt(req.params.adminId) }
+        });
+
+        res.json({
+            status: 'success',
+            message: 'Admin deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error deleting admin'
+        });
+    }
+});
 
 module.exports = router; 
