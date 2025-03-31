@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function FacultyLogin() {
     const navigate = useNavigate()
@@ -17,7 +18,7 @@ export default function FacultyLogin() {
     const [password, setPassword] = useState('')
     async function login() {
         try {
-            axios.post("http://localhost:3000/faculty/login", { username, password }).then((response) => {
+            axios.post(`${API_URL}/faculty/login`, { username, password }).then((response) => {
                 console.log(response.data)
                 localStorage.setItem('token', response.data.data.token)
                 localStorage.setItem('facultyname', response.data.data.name)

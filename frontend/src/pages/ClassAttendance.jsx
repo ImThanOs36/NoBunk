@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-
+const API_URL = import.meta.env.VITE_API_URL;
 export default function ClassAttendances() {
     const [attendanceData, setattendancesData] = useState({
         Attendance: [{ student: { name: "" } }]
@@ -12,7 +12,7 @@ export default function ClassAttendances() {
     console.log(params)
 
     async function getAttendances() {
-        axios.get(`http://localhost:3000/faculty/facultyclass/${params.id}`).then((response) => {
+        axios.get(`${API_URL}/faculty/facultyclass/${params.id}`).then((response) => {
             const data = response.data.data;
 
             const att = data.Attendance;

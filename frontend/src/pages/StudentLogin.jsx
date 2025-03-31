@@ -1,14 +1,14 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+const API_URL = import.meta.env.VITE_API_URL;
 export default function StudentLogin() {
     const navigate = useNavigate()
     const [username, setUsername] = useState()
 
     async function login() {
         try {
-            axios.post("http://localhost:3000/student/login", { username }).then((response) => {
+            axios.post(`${API_URL}/student/login`, { username }).then((response) => {
                 localStorage.setItem('name', response.data.student.name)
                 localStorage.setItem('role', response.data.student.role)
                 localStorage.setItem('enrNumber', response.data.student.enrNumber)

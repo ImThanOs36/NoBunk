@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { debounce } from 'lodash'
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 
@@ -16,7 +15,7 @@ export default function CreateClass() {
 
 
   async function getSubjects() {
-    const response = await axios.get("http://localhost:3000/faculty/subjects", {
+    const response = await axios.get(`${API_URL}/faculty/subjects`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -32,7 +31,7 @@ export default function CreateClass() {
       return;
     }
     try {
-      const response = await axios.post("http://localhost:3000/faculty/allstudents", { subjectCode }, {
+      const response = await axios.post(`${API_URL}/faculty/allstudents`, { subjectCode }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
@@ -104,7 +103,7 @@ export default function CreateClass() {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/faculty/class", { finalData }, {
+      const response = await axios.post(`${API_URL}/faculty/class`, { finalData }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }

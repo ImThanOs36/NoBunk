@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-
+const API_URL = import.meta.env.VITE_API_URL;
 export default function CreateFaculty() {
     const [formData, setFormData] = useState({
         name: '',
@@ -9,7 +9,7 @@ export default function CreateFaculty() {
         department: ''
     });
     const [loading, setLoading] = useState(false);
-    
+
     const departments = ['CSE', 'EE', 'MECH', 'CIVIL'];
 
     const handleInputChange = (e) => {
@@ -24,7 +24,7 @@ export default function CreateFaculty() {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post('http://localhost:3000/admin/faculty/create', formData, {
+            await axios.post(`${API_URL}/admin/faculty/create`, formData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }

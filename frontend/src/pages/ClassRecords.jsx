@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+const API_URL = import.meta.env.VITE_API_URL;
 export default function ClassRecords() {
     const [classDatas, setClassData] = useState([])
     const [filteredClass, setFilteredClass] = useState([])
 
 
     async function getClassData() {
-        axios.get("http://localhost:3000/faculty/facultyclasses", {
+        axios.get(`${API_URL}/faculty/facultyclasses`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }

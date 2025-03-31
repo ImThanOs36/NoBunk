@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-
+const API_URL = import.meta.env.VITE_API_URL;
 const StudentProfile = () => {
     // 1. State Management
     const [student, setStudent] = useState(null);
@@ -16,7 +16,7 @@ const StudentProfile = () => {
         const fetchStudentData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`http://localhost:3000/student/${enrNumber}`, {
+                const response = await axios.get(`${API_URL}/student/${enrNumber}`, {
                     headers: {
                         Authorization: "Bearer " + localStorage.getItem('token')
                     }

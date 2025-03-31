@@ -17,7 +17,7 @@ export default function StudentDashboard() {
 
   async function getData() {
     try {
-      axios.get(`http://localhost:3000/student/${enrNumber}`, {
+      axios.get(`${API_URL}/student/${enrNumber}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
