@@ -268,6 +268,9 @@ router.get("/attendance", async (req, res, next) => {
                 department: department,
                 year: year,
             },
+            orderBy: {
+                rollNumber: 'asc'
+            },
             select: {
                 id: true,
                 name: true,
@@ -575,7 +578,7 @@ router.get("/export-attendance", async (req, res) => {
 
         // Prepare data for Excel
         const workbook = XLSX.utils.book_new();
-        
+
         // Create attendance summary sheet
         const summaryData = students.map(student => {
             const totalClasses = student.attendance.length;
@@ -620,7 +623,7 @@ router.get("/export-attendance", async (req, res) => {
         XLSX.utils.book_append_sheet(workbook, subjectWiseSheet, 'Subject-wise Attendance');
 
         // Create detailed attendance sheet
-        const detailedData = students.flatMap(student => 
+        const detailedData = students.flatMap(student =>
             student.attendance.map(record => ({
                 'Roll Number': student.rollNumber,
                 'Name': student.name,
@@ -636,11 +639,11 @@ router.get("/export-attendance", async (req, res) => {
 
         // Generate Excel file
         const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
-        
+
         // Set response headers
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=attendance_${department}_${year}.xlsx`);
-        
+
         // Send the Excel file
         res.send(excelBuffer);
     } catch (error) {
@@ -939,7 +942,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Find admin by email
-        const admin = await prisma.admin.findUnique({ 
+        const admin = await prisma.admin.findUnique({
             where: { email },
             select: {
                 id: true,
@@ -1032,7 +1035,7 @@ router.post('/create', async (req, res) => {
         const adminExists = await prisma.admin.findUnique({
             where: { email }
         });
-        
+
         if (adminExists) {
             return res.status(400).json({
                 status: 'error',
@@ -1075,7 +1078,7 @@ router.post('/create', async (req, res) => {
 router.put('/:adminId', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        
+
         // Check if admin exists
         const admin = await prisma.admin.findUnique({
             where: { id: parseInt(req.params.adminId) }
@@ -1154,7 +1157,7 @@ router.delete('/:adminId', async (req, res) => {
         const superAdminCount = await prisma.admin.count({
             where: { role: 'SUPER_ADMIN' }
         });
-        
+
         if (superAdminCount === 1 && admin.role === 'SUPER_ADMIN') {
             return res.status(400).json({
                 status: 'error',
