@@ -7,7 +7,7 @@ const app = express();
 
 // Security Middleware
 app.use(helmet()); // Adds various HTTP headers for security
-app.use(cors()); // Enable CORS for all routes
+app.use(cors({ origin:*})); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON bodies
 
 // Rate Limiting
