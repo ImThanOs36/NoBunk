@@ -10,6 +10,7 @@ const multer = require('multer')
 const upload = multer()
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
+const nodemailer = require("nodemailer")
 
 
 const prisma = new PrismaClient();
@@ -367,6 +368,14 @@ router.get("/attendance", async (req, res, next) => {
             };
         }));
 
+
+
+
+
+
+
+
+
         res.status(200).json({
             status: 'success',
             data: attendanceData
@@ -635,10 +644,41 @@ router.get("/export-attendance", async (req, res) => {
         );
 
         const detailedSheet = XLSX.utils.json_to_sheet(detailedData);
-        XLSX.utils.book_append_sheet(workbook, detailedSheet, 'Detailed Attendance');
+        XLSX.utils.book_append_sheet(workbook, detailedSheet, 'Detailed_Attendance');
 
         // Generate Excel file
         const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_SERVER,
+            port: process.env.SMTP_PORT,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASSWORD,
+            },
+        });
+
+        const info = await transporter.sendMail({
+            from: '"Shubham Lad" <lads42279@gmail.com>',
+            to: "ladshubham36@gmail.com",
+            subject: "Issue Report",
+            text: `Hello,
+      
+      
+      Best regards,
+      Shubham Lad
+      <lads42279@gmail.com>`,
+            attachments: [
+                {
+                    filename: "Detailed_Attendance.xlsx",
+                    content: excelBuffer,
+                    encoding: "base64",
+                },
+            ],
+        });
+
+
 
         // Set response headers
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -646,6 +686,11 @@ router.get("/export-attendance", async (req, res) => {
 
         // Send the Excel file
         res.send(excelBuffer);
+
+
+
+
+
     } catch (error) {
         res.status(500).json({
             status: 'error',
