@@ -27,11 +27,11 @@ export default function AdminLogin() {
         try {
             const response = await axios.post(`${API_URL}/admin/login`, formData);
             const { token, admin } = response.data.data;
-            
+
             // Store token and admin info in localStorage
             localStorage.setItem('token', token);
             localStorage.setItem('adminInfo', JSON.stringify(admin));
-            
+
             // Redirect to admin dashboard
             navigate('/admin');
         } catch (error) {
@@ -40,61 +40,65 @@ export default function AdminLogin() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Admin Login
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Sign in to access the admin dashboard
-                    </p>
+        <div className='overflow-hidden h-screen'>
+            <div className='w-full flex font-ranade'>
+
+
+
+                <div className=' w-1/2 hidden sm:flex items-center justify-center h-screen bg-black text-white  text-4xl'>
+                    Login to your Admin account
                 </div>
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <label htmlFor="email" className="sr-only">Email address</label>
+
+
+                <div className='w-full sm:w-1/2 flex items-center justify-center h-screen bg-gray-100'>
+                    <form className="mt-8 space-y-6 flex flex-col md:w-1/2 border-2 bg-white border-gray-600 p-4 rounded-xl min-h-80 font-semibold pt-6" onSubmit={handleSubmit}>
+                        <div className="rounded-md shadow-sm -space-y-px flex flex-col gap-2">
+
+                            <label htmlFor="email" className=" p-2 text-gray-600">Email address</label>
                             <input
                                 id="email"
                                 name="email"
                                 type="email"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                className="w-full border-2  rounded-lg py-2 px-6"
                                 placeholder="Email address"
                                 value={formData.email}
                                 onChange={handleChange}
+                                
                             />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="sr-only">Password</label>
+
+
+                            <label htmlFor="password" className=" p-2  text-gray-600">Password</label>
                             <input
                                 id="password"
                                 name="password"
                                 type="password"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                className="w-full border-2  rounded-lg py-2 px-6"
                                 placeholder="Password"
                                 value={formData.password}
                                 onChange={handleChange}
                             />
-                        </div>
-                    </div>
+                            <button
+                                type="submit"
+                                className="w-full mt-4 bg-black text-white py-2 px-4 rounded-lg"
+                            >
+                                Sign in
+                            </button>
 
-                    {error && (
-                        <div className="text-red-500 text-sm text-center">
-                            {error}
                         </div>
-                    )}
 
-                    <div>
-                        <button
-                            type="submit"
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            Sign in
-                        </button>
-                    </div>
-                </form>
+                        {error && (
+                            <div className="text-red-500 text-sm text-center">
+                                {error}
+                            </div>
+                        )}
+
+                        <div>
+
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );

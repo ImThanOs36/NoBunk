@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import StudentBulkUpload from '../components/StudentBulkUpload';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const ITEMS_PER_PAGE = 10;
@@ -442,6 +443,9 @@ export default function StudentManagement() {
                     </div>
                 </div>
             )}
+
+
+            <StudentBulkUpload />
         </div>
     );
 } 

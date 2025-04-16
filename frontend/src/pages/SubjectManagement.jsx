@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function SubjectManagement() {
@@ -306,7 +307,7 @@ export default function SubjectManagement() {
                     </div>
 
                     {/* Subject List */}
-                    <div className="bg-white rounded-lg shadow-md p-6">
+                    <div className="bg-white rounded-lg shadow-md p-6 overflow-y-scroll max-h-[70vh]">
                         <h2 className="text-xl font-semibold mb-4">Subject List</h2>
                         <div className="grid grid-cols-1 gap-4">
                             {subjects.map((subject) => (
@@ -513,6 +514,7 @@ export default function SubjectManagement() {
                             </div>
                         </form>
                     </div>
+                    
                 </div>
             )}
         </div>

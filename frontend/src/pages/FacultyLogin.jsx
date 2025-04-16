@@ -5,14 +5,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export default function FacultyLogin() {
     const navigate = useNavigate()
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    console.log(isLoggedIn)
 
-    useEffect(() => {
-        if (isLoggedIn) {
-            navigate("/faculty")
-        }
-    }, [])
+
+  
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
@@ -25,7 +20,7 @@ export default function FacultyLogin() {
                 localStorage.setItem('role', response.data.data.role)
                 localStorage.setItem('department', response.data.data.department)
                 localStorage.setItem('id', response.data.data.id)
-                localStorage.setItem('isLoggedIn', response.data.data.isLoggedIn)
+               
 
                 navigate("/faculty")
             })
@@ -38,9 +33,14 @@ export default function FacultyLogin() {
     return (
         <div className='overflow-hidden h-screen'>
             <div className='w-full flex font-ranade'>
+                
                 <div className=' w-1/2 hidden sm:flex items-center justify-center h-screen bg-black text-white  text-4xl'>
                     Login to your faculty account
                 </div>
+
+
+
+
                 <div className='w-full sm:w-1/2 flex items-center justify-center h-screen bg-gray-100'>
                     <div className='flex flex-col md:w-1/2 border-2 bg-white border-gray-600 p-4 rounded-xl min-h-80 font-semibold pt-6'>
                         <label htmlFor="username" className='p-2 text-gray-600'>Email Id</label>

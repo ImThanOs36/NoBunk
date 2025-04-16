@@ -72,31 +72,38 @@ router.post("/faculty/create", async (req, res, next) => {
             data: faculty
         });
     } catch (error) {
+
         next(error);
     }
 });
 
-router.post("/subject/create", async (req, res, next) => {
+router.post("/subjects/add", async (req, res, next) => {
     try {
-        const { name, code, department, semester, year, type } = req.body;
+        const { name, code, department, semester, year,type } = req.body;
+
+        if (!name || !code || !department || !semester || !year) {
+            throw new AppError("Subject name, code, department, semester and year are required", 400);
+        }
+
         const subject = await prisma.subject.create({
             data: {
                 name,
                 code: Number(code),
-                department: department,
+                department,
                 semester: Number(semester),
                 year,
                 type
             }
-        })
+        });
+
         res.status(201).json({
             status: 'success',
             data: subject
-        })
+        });
     } catch (error) {
         next(error);
     }
-})
+});
 router.post("/subject/assign", async (req, res, next) => {
     try {
         const { subjectCode, facultyId } = req.body;
@@ -172,32 +179,7 @@ router.post("/student/addbulk", upload.single('file'), async (req, res, next) =>
     }
 });
 
-router.post("/subjects/add", async (req, res, next) => {
-    try {
-        const { name, code, department, semester, year } = req.body;
 
-        if (!name || !code || !department || !semester || !year) {
-            throw new AppError("Subject name, code, department, semester and year are required", 400);
-        }
-
-        const subject = await prisma.subject.create({
-            data: {
-                name,
-                code: Number(code),
-                department,
-                semester: Number(semester),
-                year
-            }
-        });
-
-        res.status(201).json({
-            status: 'success',
-            data: subject
-        });
-    } catch (error) {
-        next(error);
-    }
-});
 
 router.put("/subjects/edit", async (req, res, next) => {
     try {
