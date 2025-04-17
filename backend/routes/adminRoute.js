@@ -1079,7 +1079,7 @@ router.post('/create', async (req, res) => {
                 name,
                 email,
                 password: hashedPassword,
-                role: 'SUPER_ADMIN'
+                
             },
             select: {
                 id: true,
@@ -1094,6 +1094,7 @@ router.post('/create', async (req, res) => {
             data: admin
         });
     } catch (error) {
+        console.log(error)
         res.status(500).json({
             status: 'error',
             message: 'Error creating admin'

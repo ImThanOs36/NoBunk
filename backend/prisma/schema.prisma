@@ -51,7 +51,7 @@ model Admin {
   name       String
   email      String @unique()
   password   String
-  department String
+  department String? @default("admin")
   role       String @default("admin")
 }
 
