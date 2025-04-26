@@ -121,11 +121,12 @@ router.post("/class", authMiddleware, async (req, res, next) => {
         next(error);
     }
 })
-router.get("/subjects", async (req, res, next) => {
+router.get("/subjects",  authMiddleware, async (req, res, next) => {
+    const userId = req.userId;
     try {
         const subjects = await prisma.subject.findMany({
             where: {
-                facultyId: req.userId
+                facultyId: userId
             }
         });
         res.status(200).json({

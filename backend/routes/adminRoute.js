@@ -2,7 +2,6 @@ const { PrismaClient } = require("@prisma/client");
 const { Router } = require("express");
 const router = Router();
 const { AppError } = require("../utils/errorHandler");
-const authMiddleware = require("../middleware/authMiddleware");
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
